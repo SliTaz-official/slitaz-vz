@@ -1,0 +1,232 @@
+#!/bin/sh
+# Tazadmin - SliTaz System Configuration
+#
+#
+# Author : Eric Joseph-Alexandre (Erjo) <erjo@slitaz.org>
+#           
+
+#export DIALOGRC=$PWD/rc/slackware.rc
+
+VERSION=1.0
+
+: ${DIALOG=dialog}
+
+BACKTITLE="SliTaz Configuration Tools v.${VERSION}"
+COMMAND=$1
+LOG=/tmp/$(basename $0).log
+OUT=/tmp/_retval_
+DATADIR=/usr/share/slitaz-tools/tazadmin/
+#DATADIR=./
+
+BS="15 50"
+
+# Messages language setting
+# Switch to default English if $LANG.msg doesn't exist.
+set_locale()
+{
+	if [ -f ${LANG%%_*}.msg ]; then
+		. ${DATADIR}${LANG%%_*}.msg
+	fi
+}
+
+# use  --msgbox.
+# syntax: msg ["Title"] "Message text"
+msg()
+{
+	if [ $# -gt 1 ]; then
+		TITLE=$1
+		shift
+		MSG="$@"
+	else
+		MSG="$@"
+	fi
+	$DIALOG --title " ${TITLE:-Message} " \
+		--colors --backtitle "$BACKTITLE" \
+		--clear --msgbox "\n$MSG" 0 0
+}
+
+# Exit install if user is not root.
+check_root()
+{
+	if test $(id -u) != 0 ; then
+		error_message "$ERR_CHK_ROOT"
+		exit 0
+	fi
+}
+
+# functions
+#
+trim(){
+	read LINE
+	echo $LINE
+}
+
+get_argc()
+{
+	echo $#
+}
+
+
+
+
+get_hostname()
+{
+	# Set hostname
+	HOSTNAME=$(cat /etc/hostname)
+	exec 3>&1
+	HOSTNAME=`$DIALOG --backtitle "$BACKTITLE"  --title "Hostname" --clear  \
+        --inputbox "Enter your computer hostname" $BS "${HOSTNAME}" 2>&1 1>&3`
+	ret=$?
+	exec 3>&-
+	# if $HOSTNAME is set we update /etc/hostname
+	# and change current hostname.
+	if [ ! -z ${HOSTNAME} ]; then
+		echo ${HOSTNAME} > /etc/hostname
+		hostname $(cat /etc/hostname)
+	fi
+}	
+
+set_ip_adress()
+{
+	# Set static configuration for Network.
+	. /etc/network.conf	
+	exec 3>&1
+	IPCONFIG=`$DIALOG --ok-label "Submit" \
+     	--backtitle "$BACKTITLE" --extra-button --extra-label "${BTN_DHCP:-Use DHCP server}"\
+     	--title " IP configuration " \
+		--form "Here is a possible piece of a configuration program." \
+		20 55 0 \
+    	"Interface          : " 1 1 "$INTERFACE" 1 21 20 0 \
+    	"IP Address         : " 2 1 "$IP" 2 21 20 0 \
+    	"Network mask       : " 3 1 "$NETMASK"  3 21  20 0 \
+    	"Default gateway    : " 4 1 "$GATEWAY"  4 21  20 0 \
+    	"DNS server(s)      : " 5 1 "$DNS_SERVER" 5 21 20 0 \
+    	2>&1 1>&3`
+		ret=$?
+		exec 3>&-
+		
+	case "$ret" in
+		0)
+			if  [[ "`get_argc $IPCONFIG`" -gt "1" ]]; then
+				set_static_ip $IPCONFIG
+			else
+				msg "${ERR_BED_IP:-Invalid values.}"
+			fi
+			;;
+		3)
+			get_dhcp_lease ;;
+	esac	
+}
+
+get_dhcp_lease()
+{
+	sed -i 's/DHCP=.*/DHCP="yes"/' /etc/network.conf
+	sed -i 's/STATIC=.*/STATIC="no"/' /etc/network.conf
+	/sbin/udhcpc -b -i $INTERFACE -p /var/run/udhcpc.$INTERFACE.pid &
+}
+
+set_static_ip()
+{
+	sed -i 's/DHCP=.*/DHCP="no"/' /etc/network.conf
+	sed -i 's/STATIC=.*/STATIC="yes"/' /etc/network.conf
+	sed -i -e "s/INTERFACE=".*"/INTERFACE=\"$1\"/" /etc/network.conf
+	sed -i -e "s/IP=".*"/IP=\"$2\"/" /etc/network.conf
+	sed -i -e "s/NETMASK=".*"/NETMASK=\"$3\"/" /etc/network.conf
+	sed -i -e "s/GATEWAY=".*"/GATEWAY=\"$4\"/" /etc/network.conf
+	sed -i -e "s/DNS_SERVER=".*"/DNS_SERVER=\"$5\"/" /etc/network.conf
+}
+	
+network_menu()
+{
+	ret=0
+ 	until [ $ret -eq 1 ];do
+    	$DIALOG --title "$MENU_TITLE" \
+        	--backtitle "$BACKTITLE" --clear \
+        	--cancel-label "Quitter" \
+        	--colors \
+        	--menu "$TAZ_CMD_MSG" 15 50 40\
+        	"adress"  	"  Network settings" \
+        	"hostname"  	"  Set your hostname" \
+        	2> $OUT
+    	ret=$?
+    	case `cat $OUT` in
+       	hostname)
+			get_hostname ;;
+       	adress)
+       		set_ip_adress ;;
+    	esac
+	done
+}
+
+set_password()
+{
+	SEP='
+'
+	exec 3>&1
+	PASSWORD=`$DIALOG --backtitle "$BACKTITLE" --title "Set password" --clear \
+ 		--separate-widget "$SEP" \
+ 		--insecure --passwordbox "Enter new password for user below: \n\n" 10 50 \
+		--title "Confirme password" \
+        --insecure --passwordbox "Confirme new password for user below: \n\n"	10 50 2>&1 1>&3`
+	ret=$?
+	exec 3>&-
+	if [ -z "${PASSWORD}" ]; then
+		msg "Password not set"
+	else
+		PASS1="$(echo $PASSWORD | cut -d ' ' -f1)"
+		PASS2="$(echo $PASSWORD | cut -d ' ' -f2)"
+		if [ "$PASS1" != "$PASS2" ]; then
+			msg "Passwords don't match.\nNothing change."
+		else
+			echo  "root:$PASS1" | chpasswd
+		fi
+	fi
+}
+
+##
+# Program sequence
+#
+set_locale
+check_root
+
+until [ $retval -eq 1 ];do
+	$DIALOG --title "$MENU_TITLE" \
+		--backtitle "$BACKTITLE" --clear \
+		--cancel-label "Quitter" \
+		--colors \
+		--menu "$TAZ_CMD_MSG" 15 50 40\
+		"keymap"  		"  Keyboard mapping" \
+		"locale"      	"  Language setting" \
+		"network"   	"  Netwok configuration" \
+		"password" 		"  Change root password" \
+		2> $OUT
+	
+	retval=$?
+	
+	# Execute commands
+	#
+	case `cat $OUT` in
+		keymap)
+			if [ -x /sbin/tazkeymap ]; then
+				tazkeymap
+			else
+				msg "Unable to find tazkeymap !"
+			fi
+			;;
+		locale)
+			if [ -x /sbin/tazlocale ]; then
+				tazlocale
+			else
+				msg "Unable to find tazlocale !"
+			fi
+			;;
+		network)
+			network_menu;;
+		password)
+			set_password ;;
+	esac
+done
+
+clear
+
+exit 0

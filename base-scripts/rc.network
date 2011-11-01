@@ -1,0 +1,79 @@
+#!/bin/sh
+# rc.network, set network config stuff for OpenVZ container.
+#
+# 
+
+. /etc/init.d/rc.functions
+
+if [ -z "$2" ]; then
+	. /etc/network.conf 
+else
+	. $2 
+fi
+
+Boot() {
+	# Set hostname.
+	/bin/hostname -F /etc/hostname
+
+	# We are always start loopback
+	ifconfig lo up
+}
+
+_ifconfig() {
+	#  Use ethernet
+	ifconfig $INTERFACE up	
+	
+	# Start all network devices
+	for interface in /etc/network/ifconfig-*
+	do
+		DEVICE=$(echo "`basename $interface`" | sed 's/ifconfig-//') 
+		. $interface
+		if [ "$ONBOOT" = "yes" ]; then
+			case $MODE in
+				static)
+					/sbin/ifconfig $DEVICE $IP netmask $NETMASK broadcast  $BROADCAST up ;;
+				dhcp)
+					/sbin/udhcpc -b -T 1 -A 12 -i $INTERFACE -p /var/run/udhcpc.$INTERFACE.pid ;;
+				*)
+					echo "$MODE is not supported." ;;
+			esac
+		fi
+	done
+}
+
+# Stopping everything
+Stop() {
+	echo "Stopping all interfaces"
+	ifconfig $INTERFACE down
+	
+	# Stopping all network interfaces.
+	for interface in /etc/network/ifconfig-*
+	do
+		DEVICE=$(echo "`basename $interface`" | sed 's/ifconfig-//') 
+		. $interface
+		if [ "$ONBOOT" = "yes" ]; then
+			/sbin/ifconfig $DEVICE down
+		fi
+	done
+	
+}
+
+Start() {
+	_ifconfig
+}
+
+# looking for arguments:
+case $1 in
+		start)
+			Start ;;
+		stop)
+			Stop ;;
+		restart)
+			Stop
+			Start
+			;;
+		*)
+			Boot
+			Start
+			;;
+esac

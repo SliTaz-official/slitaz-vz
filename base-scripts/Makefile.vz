@@ -1,0 +1,45 @@
+# Build Slitaz template for OpenVZ
+#
+# 2011/01 Eric Joseph-Alexandre <erjo@slitaz.org> - 
+# Publish under GNU General Public License.
+
+MIRROR+=http://mirror.slitaz.org/iso/
+VERSION+=3.0
+FLAVOR+=base
+SRC+=./777
+TMP+=/tmp
+
+all:
+
+
+template: prepare tar-gz
+
+prepare:
+	@rm -rf $(SRC)/lib/modules
+	
+	# Set mtab config
+	rm -f $(SRC)/etc/mtab
+	ln -s /proc/mounts $(SRC)/etc/mtab
+
+	# Set fstab config
+	echo '# /etc/fstab: in VE file system.' > $(SRC)/etc/fstab
+	echo '#' >> $(SRC)/etc/fstab
+	echo 'proc            /proc        proc    defaults          0       0' >> $(SRC)/etc/fstab
+	echo 'devpts          /dev/pts     devpts  defaults          0       0' >> $(SRC)/etc/fstab
+
+	# Disable root login
+	sed -i '/^root.*/root:!:13525:0:99999:7:::/' $(SRC)/etc/shadow
+	
+	# Disable tty
+	sed -i 's/^tty/#tty/'  $(SRC)/etc/shadow
+
+
+tar-gz:
+	cd $(SRC) ; tar cvzf $(TMP)/slitaz-$(FLAVOR)-$(VERSION).tar.gz .
+
+download:
+	cd $(SRC)
+	
+
+
+.PHONY: prepare template download
