@@ -1,0 +1,35 @@
+Slitaz template for OpenVZ
+==========================
+
+
+1) Télécharger l'image ISO
+
+2) Monter l'ISO sur un répertoire.
+
+3) Créez un répertoire temporaire pour y extraire le rootfs et placez dans ce répertoire.
+   
+	# mkdir 777
+	# cd 777
+   
+4) Extraie le fichier rootfs de l'image dans le répertoire temporaire
+
+	# lzma -d -c -S gz /mnt/boot/rootfs.gz | cpio -iv
+	
+5) Installez bash et tous les programmes que vous souhaitez trouver dans votre template.
+
+	# chroot 777
+	# tazpkg get-install bash
+	
+Note: Pensez à vider le cache avant de quitter le chroot (tazpkg clean_cache).
+
+6) Quittez le répertoire temporaire et lancez la commande make
+
+	# make -f Makefile.vz template
+	
+* 	network.sh, hwconf.sh are moved from $RUN_SCRIPTS
+	hald, dbus, slim form $RUN_DAEMONS
+	
+	
+	
+
+

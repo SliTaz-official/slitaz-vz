@@ -1,0 +1,22 @@
+Slitaz VZ - Configuring Proxmox server for SliTaz templates.
+============================================================
+
+
+Advice: All scripts files have been tested only on PROXMOX provided by OVH.
+Network config may différ from the legacy PROXMOX distro.
+
+Any suggestion or bug reports are welcomed : erjo@slitaz.org
+
+1) Download the config file slitaz.conf. This file goes in /etc/vz/dists
+
+	# wget http://hg.slitaz.org/slitaz-vz/file/2d20f72ffb19/vz-scripts/proxmox-ovh/slitaz.conf
+	
+2) Download and copy slitaz-add_ip.sh, slitaz-del_ip.sh, slitaz-set_hosname.sh to /etc/vz/dists/scripts
+
+	# cd /etc/vz/dists
+	# wget http://hg.slitaz.org/slitaz-vz/file/2d20f72ffb19/vz-scripts/proxmox-ovh/slitaz-add_ip.sh
+	# wget http://hg.slitaz.org/slitaz-vz/file/2d20f72ffb19/vz-scripts/proxmox-ovh/slitaz-del_ip.sh
+	# wget http://hg.slitaz.org/slitaz-vz/file/2d20f72ffb19/vz-scripts/proxmox-ovh/slitaz-set_dns.sh
+	
+
+3) Now you can create your VM with vzctl or proxmox Web GUI.
