@@ -178,7 +178,7 @@ set_password()
 		if [ "$PASS1" != "$PASS2" ]; then
 			msg "Passwords don't match.\nNothing change."
 		else
-			echo  "root:$PASS1" | chpasswd
+			echo  "root:$PASS1" | chpasswd -m
 		fi
 	fi
 }
