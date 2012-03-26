@@ -1,7 +1,7 @@
 # Build Slitaz template for OpenVZ
 #
 # 2011/01 Eric Joseph-Alexandre <erjo@slitaz.org> - 
-# Publish under GNU General Public License.
+# Published under GNU General Public License.
 
 MIRROR+=http://mirror.slitaz.org/iso/
 VERSION+=3.0

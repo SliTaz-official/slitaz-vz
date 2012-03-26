@@ -51,6 +51,6 @@ if [ ! -f /var/lib/slitaz-vz ]; then
         sqlite3  /usr/share/ovz-web-panel/db/production.sqlite3 "insert into hardware_servers(host,auth_key) values('localhost','"$(echo $RAND_KEY)"')"      
         /usr/bin/ruby /usr/share/ovz-web-panel/utils/hw-daemon/hw-daemon.rb start 
 	
-	# Create slitaz-vz will prevent this configs. 
+	# Create slitaz-vz will prevent this config. 
 	date > /var/lib/slitaz-vz
 fi

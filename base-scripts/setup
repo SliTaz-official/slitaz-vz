@@ -142,10 +142,10 @@ network_menu()
  	until [ $ret -eq 1 ];do
     	$DIALOG --title "$MENU_TITLE" \
         	--backtitle "$BACKTITLE" --clear \
-        	--cancel-label "Quitter" \
+        	--cancel-label "Quit" \
         	--colors \
         	--menu "$TAZ_CMD_MSG" 15 50 40\
-        	"adress"  	"  Network settings" \
+        	"address"  	"  Network settings" \
         	"hostname"  	"  Set your hostname" \
         	2> $OUT
     	ret=$?
@@ -166,8 +166,8 @@ set_password()
 	PASSWORD=`$DIALOG --backtitle "$BACKTITLE" --title "Set password" --clear \
  		--separate-widget "$SEP" \
  		--insecure --passwordbox "Enter new password for user below: \n\n" 10 50 \
-		--title "Confirme password" \
-        --insecure --passwordbox "Confirme new password for user below: \n\n"	10 50 2>&1 1>&3`
+		--title "Confirm password" \
+        --insecure --passwordbox "Confirm new password for user below: \n\n"	10 50 2>&1 1>&3`
 	ret=$?
 	exec 3>&-
 	if [ -z "${PASSWORD}" ]; then
@@ -176,7 +176,7 @@ set_password()
 		PASS1="$(echo $PASSWORD | cut -d ' ' -f1)"
 		PASS2="$(echo $PASSWORD | cut -d ' ' -f2)"
 		if [ "$PASS1" != "$PASS2" ]; then
-			msg "Passwords don't match.\nNothing change."
+			msg "Passwords don't match.\nNothing changed."
 		else
 			echo  "root:$PASS1" | chpasswd -m
 		fi
@@ -192,12 +192,12 @@ check_root
 until [ $retval -eq 1 ];do
 	$DIALOG --title "$MENU_TITLE" \
 		--backtitle "$BACKTITLE" --clear \
-		--cancel-label "Quitter" \
+		--cancel-label "Quit" \
 		--colors \
 		--menu "$TAZ_CMD_MSG" 15 50 40\
 		"keymap"  		"  Keyboard mapping" \
 		"locale"      	"  Language setting" \
-		"network"   	"  Netwok configuration" \
+		"network"   	"  Network configuration" \
 		"password" 		"  Change root password" \
 		2> $OUT
 	

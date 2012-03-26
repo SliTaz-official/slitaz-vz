@@ -21,7 +21,7 @@
 
 CONFIG_DIR=/var/lib/slitaz-vz
 
-# Get real network device name from stored config if exist. 
+# Get real network device name from stored config if exists. 
 if [ -f $CONFIG_DIR/network/interfaces ]; then
 	BRIDGE=$(grep ^BRIDGE $CONFIG_DIR/network/interfaces | sed 's/.*"\(.*\)"/\1/')
 	IFACE=$(grep ^INTERFACE $CONFIG_DIR/network/interfaces | sed 's/.*"\(.*\)"/\1/')
@@ -29,13 +29,13 @@ else
 	BRIDGE=br0
 	IFACE=$(grep ^INTERFACE /etc/network.conf | sed 's/.*"\(.*\)"/\1/')
 	
-	# Store interface infos for the next boot in hd mode
+	# Store interface info for the next boot in hd mode
 	mkdir -p $CONFIG_DIR/network
 	echo "BRIDGE=\"$BRIDGE\"" > $CONFIG_DIR/network/interfaces
 	echo "INTERFACE=\"$IFACE\"" >> $CONFIG_DIR/network/interfaces
 fi
 
-# Set Brigde configuration
+# Set Bridge configuration
 if [ -x /usr/sbin/brctl ]; then
 	if (/usr/sbin/brctl addbr $BRIDGE); then
 		/sbin/ifconfig $IFACE down
