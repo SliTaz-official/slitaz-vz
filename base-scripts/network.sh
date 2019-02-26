@@ -60,7 +60,7 @@ wifi() {
 		[ -n "$WIFI_MODE" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS mode $WIFI_MODE"
 		[ -n "$WIFI_CHANNEL" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS channel $WIFI_CHANNEL"
 		# unencrypted network
-		if [ "$WIFI_KEY" == "" -o "$WIFI_KEY_TYPE" == "none" ]; 
+		if [ "$WIFI_KEY" = "" -o "$WIFI_KEY_TYPE" = "none" ]; 
 then
 			iwconfig $WIFI_INTERFACE essid "$WIFI_ESSID" $IWCONFIG_ARGS
 		fi
